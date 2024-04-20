@@ -7,7 +7,7 @@ class LineCutter:
     @staticmethod
     def extractLines(image):
         horizontalHist = np.sum(image, axis=1)
-        hPeaks, _ = find_peaks(horizontalHist,height= np.max(horizontalHist) * 0.5, distance=10)
+        hPeaks, _ = find_peaks(horizontalHist,height= np.max(horizontalHist) * 0.5, distance=20)
         
         halfLine = 0
         i = hPeaks[0] - 1
