@@ -32,13 +32,19 @@ class ImageLoader:
             return None
         
     @staticmethod
-    def print(images):
+    def print(images,sep = False):
         if images is not None:
             if isinstance(images, list):
                 # If there are multiple images, display them in subplots
-                for i, image in enumerate(images):
-                    plt.imshow(image,cmap='gray')
-                    plt.show()
+                if sep:
+                    for i, image in enumerate(images):
+                        plt.imshow(image,cmap='gray')
+                        plt.show()
+                else:
+                    for i, image in enumerate(images):
+                        plt.subplot(1, len(images), i+1)
+                        plt.imshow(image,cmap='gray')
+                plt.show()
             else:
                 # If there's only one image, display it without subplots
                 plt.imshow(images,cmap='gray')
