@@ -42,7 +42,7 @@ class ImageLoader:
             else:
                 # If there's only one image, display it without subplots
                 plt.imshow(images,cmap='gray')
-            plt.show()  # Display all images together
+                plt.show()
         else:
-            print("Error loading images.")
+            print("Error printing images.")
             
