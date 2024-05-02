@@ -2,7 +2,11 @@ import cv2
 import numpy as np
 from SeparationRegion import *
 from statistics import mode
+from skimage.morphology import skeletonize
+
+
 class CharCutter:
+    @staticmethod
     def extractCharacters(line):
         thinned_lines = CharCutter.ThinningLineGeneral(line)
         #print(thinned_lines)
@@ -10,12 +14,18 @@ class CharCutter:
         BaseLine = []
         MaxTransitions = []
         SeparationRegions = []
-        for word in thinned_lines:
+        words = []
+        for wordIndex,word in enumerate(thinned_lines):
             BaseLine.append(CharCutter.BaseLineDetection(word))
             MaxTransitions.append(CharCutter.MaximumTransitions(word,BaseLine[-1]))
             SeparationRegions.append(CharCutter.CutPointIdentification(word,MaxTransitions[-1]))
-            #print(SeparationRegions[-1].StartIndex,SeparationRegions[-1].CutIndex,SeparationRegions[-1].EndIndex)
-        return SeparationRegions
+            # SeparationRegions = CharCutter.filterRegions()
+            for i in range(0,len(SeparationRegions[wordIndex])):
+                cv2.line(word,(SeparationRegions[wordIndex][i].CutIndex,0),(SeparationRegions[wordIndex][i].CutIndex,word.shape[1]),(255, 255, 255), 1)
+            words.append(word)   
+        return words
+    
+    @staticmethod
     def BaseLineDetection(word):
         #print(word)
         HorizontalHist = np.sum(word, axis=1)
@@ -28,6 +38,8 @@ class CharCutter:
                 MaximumSum = HorizontalHist[idx]
                 BaseLineIndex = idx
         return BaseLineIndex
+    
+    @staticmethod
     def MaximumTransitions(word,baseLineIndex):
         MaxTransitions = 0
         MaxTransitionsIndex = baseLineIndex
@@ -47,6 +59,8 @@ class CharCutter:
             #print(CurrentTransitions)
             idx-=1
         return MaxTransitionsIndex 
+    
+    @staticmethod
     def CutPointIdentification(word,MaxTransitionsIndex):
         kernel = np.ones((2,2),np.uint8)
         # ll = np.array(word)
@@ -63,12 +77,12 @@ class CharCutter:
                 SeparationRegions.append(SR)
                 SeparationRegions[-1].EndIndex = idx
                 Flag = 1
-                print(SeparationRegions[-1].EndIndex)
+                # print(SeparationRegions[-1].EndIndex)
             elif word[MaxTransitionsIndex][idx] == 0 and Flag == 1:
                 SeparationRegions[-1].StartIndex = idx
                 MidIndex = int((SeparationRegions[-1].StartIndex + SeparationRegions[-1].EndIndex) / 2)
                 ValidCut = []
-                print(MidIndex)
+                # print(MidIndex)
                 if VerticalHist[MidIndex] == MostPixelsVertical:
                     SeparationRegions[-1].CutIndex = MidIndex
                 else:
@@ -82,12 +96,16 @@ class CharCutter:
                 Flag = 0
             idx+=1
         return SeparationRegions
+    
+    @staticmethod
     def ThinningLineGeneral(line):
         ThinnedLines = []
         for word in line:
             ThinnedLines.append(CharCutter.ThinningLine(word))
         return ThinnedLines
+    
+    @staticmethod
     def ThinningLine(word):
         kernel = np.ones((2,2),np.uint8)
-        thinned_line = cv2.erode(np.array(word).astype('uint8'),kernel,iterations=1)
+        thinned_line = cv2.erode(np.array(word).astype('uint8'),kernel,iterations=2)
         return thinned_line
