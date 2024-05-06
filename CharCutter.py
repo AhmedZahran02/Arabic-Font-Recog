@@ -16,6 +16,7 @@ class CharCutter:
         SeparationRegions = []
         ValidSeparationRegions = []
         words = []
+        SeparatedCharacters = []
         for wordIndex,word in enumerate(thinned_lines):
             BaseLine.append(CharCutter.BaseLineDetection(word))
             MaxTransitions.append(CharCutter.MaximumTransitions(word,BaseLine[-1]))
@@ -26,10 +27,14 @@ class CharCutter:
             print("Valid Separation regions for word " + str(wordIndex) + " : ")
             print("S length: " + str(len(SeparationRegions[-1])))
             print("V length: " + str(len(ValidSeparationRegions[-1])))
+            prevCutIndex = 0
+            for i in range(0,len(ValidSeparationRegions[-1])):
+                SeparatedCharacters.append(word[:,prevCutIndex:int(ValidSeparationRegions[-1][i].CutIndex+1)])
+                prevCutIndex = ValidSeparationRegions[-1][i].CutIndex
+            words.append(word)   
             for i in range(0,len(ValidSeparationRegions[wordIndex])):
                 cv2.line(word,(ValidSeparationRegions[wordIndex][i].CutIndex,0),(ValidSeparationRegions[wordIndex][i].CutIndex,word.shape[1]),(255, 255, 255), 1)
-            words.append(word)   
-        return words
+        return SeparatedCharacters
     
     @staticmethod
     def BaseLineDetection(word):
