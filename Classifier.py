@@ -25,6 +25,6 @@ class Classifier:
     
     def classify(self,image):
         resized_letter = cv2.resize(image, (10, 20), interpolation=cv2.INTER_AREA)
-        features = FeatureExtractor.applyHOG(resized_letter)
-        predicted_label = self.clf.predict([features])[0]
+        features = FeatureExtractor.applySIFT(resized_letter)
+        predicted_label = self.clf.predict(features.reshape(-1,1))[0]
         return predicted_label

@@ -32,8 +32,8 @@ class CharCutter:
                 SeparatedCharacters.append(word[:,prevCutIndex:int(ValidSeparationRegions[-1][i].CutIndex+1)])
                 prevCutIndex = ValidSeparationRegions[-1][i].CutIndex
             words.append(word)   
-            for i in range(0,len(ValidSeparationRegions[wordIndex])):
-                cv2.line(word,(ValidSeparationRegions[wordIndex][i].CutIndex,0),(ValidSeparationRegions[wordIndex][i].CutIndex,word.shape[1]),(255, 255, 255), 1)
+            # for i in range(0,len(ValidSeparationRegions[wordIndex])):
+            #     cv2.line(word,(ValidSeparationRegions[wordIndex][i].CutIndex,0),(ValidSeparationRegions[wordIndex][i].CutIndex,word.shape[1]),(255, 255, 255), 1)
         return SeparatedCharacters
     
     @staticmethod
