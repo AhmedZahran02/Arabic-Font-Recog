@@ -5,6 +5,7 @@ from ImageLoader import ImageLoader  # Assuming ImageLoader is implemented in Im
 from skimage import data,exposure
 from skimage.feature import hog
 from sklearn import svm
+import numpy as np
 
 
 class FeatureExtractor:
@@ -20,17 +21,15 @@ class FeatureExtractor:
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
                 letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".png")
-                resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
+                resized_letter = cv2.resize(letter, (20, 40), interpolation=cv2.INTER_AREA)
                 letterDataSet.append(resized_letter)
             self.dataSet.append(letterDataSet)
 
     def extractFeatures(self):
         features = []
         for i in range(0,len(self.dataSet)):
-            feature_vectors = []
             for j in range(0,len(self.dataSet[i])):
-                feature_vectors.append(FeatureExtractor.applyHOG(self.dataSet[i][j]))
-            features.append(feature_vectors)
+                features.append(FeatureExtractor.applySIFT(self.dataSet[i][j]))
         return features
     
     @staticmethod
@@ -43,4 +42,8 @@ class FeatureExtractor:
     def applySIFT(image):
         sift = cv2.SIFT_create()
         keypoints, descriptors = sift.detectAndCompute(image, None)
-        return descriptors
+        if descriptors is not None:
+            descriptors = [descriptor for descript in descriptors for descriptor in descript]
+            return descriptors
+        else:
+            return []

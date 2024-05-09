@@ -20,13 +20,13 @@ def rename_images(folder_path):
             new_name = str(count) + extension
             # Construct the full paths
             old_path = os.path.join(folder_path, file)
-            new_path = os.path.join(folder_path, new_name)
+            new_path = os.path.join(folder_path, new_name[:-1])
             # Rename the file
             os.rename(old_path, new_path)
             count += 1
 
 # Replace 'folder_path' with the path to your folder containing images
-folder_path = "D:\\char_4K_sample\\char_sample\\"
+folder_path = ".\\char_sample\\"
 
 for i in range(1,30):
     rename_images(folder_path + str(i) + "\\")
