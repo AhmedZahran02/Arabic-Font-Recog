@@ -1,8 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import random
-from ImageLoader import ImageLoader  # Assuming ImageLoader is implemented in ImageLoader.py
-from skimage import data,exposure
+from ImageLoader import ImageLoader
 from skimage.feature import hog
 from sklearn import svm
 import numpy as np
@@ -17,33 +16,40 @@ class FeatureExtractor:
     def loadDataset(self, filePath):
         for character in range(1,30):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = random.sample(range(1, 4000 + 1), 500)
+            selected_numbers = random.sample(range(1, 4000 + 1), 2000)
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
                 letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".png")
-                resized_letter = cv2.resize(letter, (20, 40), interpolation=cv2.INTER_AREA)
+                resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
                 letterDataSet.append(resized_letter)
             self.dataSet.append(letterDataSet)
 
-    def extractFeatures(self):
+    def extractFeatures(self,method='SIFT'):
         features = []
+        labels = []
         for i in range(0,len(self.dataSet)):
             for j in range(0,len(self.dataSet[i])):
-                features.append(FeatureExtractor.applySIFT(self.dataSet[i][j]))
-        return features
+                feature = None
+                if method == 'SIFT':
+                    feature = FeatureExtractor.applySIFT(self.dataSet[i][j])
+                elif method == 'HOG':
+                    feature=FeatureExtractor.applyHOG(self.dataSet[i][j])
+                if feature is not None:
+                    features.append(feature)
+                    labels.append(str(i+1))
+        return features,labels
     
     @staticmethod
     def applyHOG(image):
         fd,hog_image = hog(image,orientations=8,pixels_per_cell=(2,2),cells_per_block=(1,1),visualize=True)
-        #hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 10))
         return fd
     
     @staticmethod
     def applySIFT(image):
         sift = cv2.SIFT_create()
         keypoints, descriptors = sift.detectAndCompute(image, None)
-        if descriptors is not None:
-            descriptors = [descriptor for descript in descriptors for descriptor in descript]
+        if descriptors is None:
             return descriptors
-        else:
-            return []
+        descriptors = np.array(descriptors).flatten()
+        padded_discriptors = np.pad(descriptors, (0, 500), 'constant')
+        return padded_discriptors[:500]
