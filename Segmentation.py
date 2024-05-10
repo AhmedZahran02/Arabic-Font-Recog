@@ -11,8 +11,8 @@ class Segmentation:
         topTwoPeaks = sorted(sorted(peaks, key=lambda x: -hist[x])[:2],reverse=True)
         
         if len(topTwoPeaks) == 0:
-            topTwoPeaks.append(0)
             topTwoPeaks.append(255)
+            topTwoPeaks.append(0)
         if len(topTwoPeaks) < 2:
             topTwoPeaks.append(topTwoPeaks[0])
             

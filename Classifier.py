@@ -21,9 +21,6 @@ class Classifier:
     
     def classify(self,image,featureExtractor,method='SIFT'):
         resized_letter = image
-        # resized_letter = cv2.resize(image, (10, 20), interpolation=cv2.INTER_AREA)
-        # _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
-        # ImageLoader.print(resized_letter)
         features = []
         if method == 'SIFT':
             features = featureExtractor.siftBagOfWord(image=resized_letter)

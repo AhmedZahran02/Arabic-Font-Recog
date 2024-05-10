@@ -8,6 +8,7 @@ from sklearn.cluster import MiniBatchKMeans, KMeans
 from Segmentation import *
 from OrientationDetector import *
 from NoiseRemoval import *
+from Preprocessing import *
 
 
 class FeatureExtractor:
@@ -19,11 +20,13 @@ class FeatureExtractor:
     def loadDataset(self, filePath):
         for character in range(1,5):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = list(range(500, 1000))
+            selected_numbers = list(range(200, 1000))
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
                 letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".jpeg")
-                alteredImage = NoiseRemoval.applyGaussianBlur(image=letter)
+                alteredImage = letter
+                if Preprocessing.detect_salt_and_pepper_noise(letter):
+                    alteredImage = NoiseRemoval.applyMedianFilter(image=letter)
                 alteredImage = Segmentation.segment(alteredImage)
                 alteredImage = OrientationDetector.rotate(alteredImage)
                 
@@ -90,14 +93,10 @@ class FeatureExtractor:
         self.cluster_model=MiniBatchKMeans(n_clusters=num_clusters)
         self.cluster_model.fit(sift_descriptors)
         print("Kmeans start")
-        for i in range(0,len(self.dataSet)):
-            for j in range(0,len(self.dataSet[i])):
-                keypoints, descriptors = FeatureExtractor.applySIFT(self.dataSet[i][j])
-                if descriptors is not None:
-                    kmeanLabels = self.cluster_model.predict(descriptors)
-                    histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
-                    histograms.append(histogram.astype(float))
-                    
+        for feature in features:
+                kmeanLabels = self.cluster_model.predict(feature)
+                histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
+                histograms.append(histogram.astype(float))      
         print("Kmeans Done")            
         return histograms,labels
     
