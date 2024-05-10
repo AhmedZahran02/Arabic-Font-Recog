@@ -4,20 +4,20 @@ import random
 from ImageLoader import ImageLoader
 from skimage.feature import hog
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans, KMeans 
 
 
 
 class FeatureExtractor:
-    arabic_letters = ['ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'لا', 'م', 'ن', 'ه', 'و', 'ي']
+    arabic_letters = ['ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'لا', 'م', 'ن', 'ه', 'و', 'ي','لا']
     def __init__(self):
         self.dataSet = []
-        self.kmeans = None
+        self.cluster_model = None
 
     def loadDataset(self, filePath):
         for character in range(1,30):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = random.sample(range(1, 4000 + 1), 500)
+            selected_numbers = random.sample(range(1, 4000 + 1), 4000)
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
                 letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".png")
@@ -74,25 +74,28 @@ class FeatureExtractor:
         return keypoints, descriptors
     
     # sift feature extraction extension
-    def siftBagOfWords(self,num_clusters = 20):
+    def siftBagOfWords(self,num_clusters = 100):
         histograms = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
-        self.kmeans = KMeans(n_clusters=num_clusters)
-        self.kmeans.fit(sift_descriptors)
+        if sift_descriptors.shape[1] != 128:
+            raise ValueError('Expected SIFT descriptors to have 128 features, got', sift_descriptors.shape[1])
+
+        self.cluster_model=MiniBatchKMeans(n_clusters=num_clusters)
+        self.cluster_model.fit(sift_descriptors)
         
         for i in range(0,len(self.dataSet)):
             for j in range(0,len(self.dataSet[i])):
                 keypoints, descriptors = FeatureExtractor.applySIFT(self.dataSet[i][j])
                 if descriptors is not None:
-                    kmeanLabels = self.kmeans.predict(descriptors)
+                    kmeanLabels = self.cluster_model.predict(descriptors)
                     histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
                     histograms.append(histogram.astype(float))
                     
         return histograms,labels
     
         # sift feature extraction extension
-    def surfBagOfWords(self,num_clusters = 20):
+    def surfBagOfWords(self,num_clusters = 100):
         histograms = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SURF')
         surf_descriptors = np.concatenate(features, axis=0)
@@ -109,7 +112,7 @@ class FeatureExtractor:
                     
         return histograms,labels
     
-    def combinedFeatureExtraction(self,num_clusters = 20):
+    def combinedFeatureExtraction(self,num_clusters = 100):
         combinedFeatures = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
@@ -127,21 +130,21 @@ class FeatureExtractor:
                     
         return combinedFeatures,labels
     
-    def siftBagOfWord (self,image,num_clusters = 20):
+    def siftBagOfWord (self,image,num_clusters = 100):
         keypoints, descriptors = FeatureExtractor.applySIFT(image)
         if descriptors is None:
             return np.zeros(num_clusters)
         else:
-            labels = self.kmeans.predict(descriptors)
+            labels = self.cluster_model.predict(descriptors)
             histogram, _ = np.histogram(labels, bins=np.arange(num_clusters + 1))
             return histogram.astype(float)
         
-    def surfBagOfWord (self,image,num_clusters = 20):
+    def surfBagOfWord (self,image,num_clusters = 100):
         keypoints, descriptors = FeatureExtractor.applySURF(image)
         if descriptors is None:
             return np.zeros(num_clusters)
         else:
-            labels = self.kmeans.predict(descriptors)
+            labels = self.cluster_model.predict(descriptors)
             histogram, _ = np.histogram(labels, bins=np.arange(num_clusters + 1))
             return histogram.astype(float)
             
