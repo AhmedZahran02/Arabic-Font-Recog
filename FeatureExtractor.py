@@ -54,7 +54,7 @@ class FeatureExtractor:
         return keypoints,descriptors
     
     # sift feature extraction extension
-    def bagOfWords(self,num_clusters = 100):
+    def bagOfWords(self,num_clusters = 1000):
         histograms = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
