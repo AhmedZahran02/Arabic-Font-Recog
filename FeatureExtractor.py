@@ -5,7 +5,9 @@ from ImageLoader import ImageLoader
 from skimage.feature import hog
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans, KMeans 
-
+from Segmentation import *
+from OrientationDetector import *
+from NoiseRemoval import *
 
 
 class FeatureExtractor:
@@ -15,15 +17,18 @@ class FeatureExtractor:
         self.cluster_model = None
 
     def loadDataset(self, filePath):
-        for character in range(1,30):
+        for character in range(1,5):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = random.sample(range(1, 4000 + 1), 4000)
+            selected_numbers = random.sample(range(1, 999 + 1), 100)
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
-                letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".png")
-                resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
+                letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".jpeg")
+                alteredImage = NoiseRemoval.applyGaussianBlur(image=letter)
+                alteredImage = Segmentation.segment(alteredImage)
+                alteredImage = OrientationDetector.rotate(alteredImage)
+                # resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
                 # _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
-                letterDataSet.append(resized_letter)
+                letterDataSet.append(letter)
             self.dataSet.append(letterDataSet)
 
     def extractFeatures(self,method='HOG'):
@@ -83,7 +88,7 @@ class FeatureExtractor:
 
         self.cluster_model=MiniBatchKMeans(n_clusters=num_clusters)
         self.cluster_model.fit(sift_descriptors)
-        
+        print("Kmeans start")
         for i in range(0,len(self.dataSet)):
             for j in range(0,len(self.dataSet[i])):
                 keypoints, descriptors = FeatureExtractor.applySIFT(self.dataSet[i][j])
@@ -92,6 +97,7 @@ class FeatureExtractor:
                     histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
                     histograms.append(histogram.astype(float))
                     
+        print("Kmeans Done")            
         return histograms,labels
     
         # sift feature extraction extension

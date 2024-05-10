@@ -13,15 +13,16 @@ class Classifier:
     def __init__(self):
         self.pipeline = Pipeline([
             ('scaler', StandardScaler()),
-            ('ada_boost', AdaBoostClassifier(n_estimators=100,random_state=42,algorithm="SAMME",estimator=SVC(kernel='linear')))
+            ('ada_boost', AdaBoostClassifier(n_estimators=50,random_state=42,algorithm="SAMME",estimator=SVC(kernel='linear')))
         ])
 
     def train(self,features,labels):
         self.pipeline.fit(features,labels)
     
     def classify(self,image,featureExtractor,method='SIFT'):
-        resized_letter = cv2.resize(image, (10, 20), interpolation=cv2.INTER_AREA)
-        _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
+        resized_letter = image
+        # resized_letter = cv2.resize(image, (10, 20), interpolation=cv2.INTER_AREA)
+        # _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
         # ImageLoader.print(resized_letter)
         features = []
         if method == 'SIFT':
