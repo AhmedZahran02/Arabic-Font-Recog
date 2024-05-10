@@ -19,16 +19,17 @@ class FeatureExtractor:
     def loadDataset(self, filePath):
         for character in range(1,5):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = random.sample(range(1, 999 + 1), 100)
+            selected_numbers = list(range(500, 1000))
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
                 letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".jpeg")
                 alteredImage = NoiseRemoval.applyGaussianBlur(image=letter)
                 alteredImage = Segmentation.segment(alteredImage)
                 alteredImage = OrientationDetector.rotate(alteredImage)
+                
                 # resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
                 # _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
-                letterDataSet.append(letter)
+                letterDataSet.append(alteredImage)
             self.dataSet.append(letterDataSet)
 
     def extractFeatures(self,method='HOG'):

@@ -55,12 +55,15 @@ class OrientationDetector:
         
         contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         bounding_rectangles = [cv2.boundingRect(contour) for contour in contours]
-        outer_boundary = cv2.minAreaRect(np.concatenate([np.array([[x,y],[x+w,y+h]]) for x,y,w,h in bounding_rectangles]))
-        box = cv2.boxPoints(outer_boundary)
-        box = np.int0(box)
-        width = np.max(box[:,0])-np.min(box[:,0])
-        height = np.max(box[:,1])-np.min(box[:,1])
-        
+        if(not (len(bounding_rectangles) == 0)):
+            outer_boundary = cv2.minAreaRect(np.concatenate([np.array([[x,y],[x+w,y+h]]) for x,y,w,h in bounding_rectangles]))
+            box = cv2.boxPoints(outer_boundary)
+            box = np.int0(box)
+            width = np.max(box[:,0])-np.min(box[:,0])
+            height = np.max(box[:,1])-np.min(box[:,1])
+        else:
+            width = image.shape[0]
+            height = image.shape[1]
         numHZerosBetweenPeaks *= width
         numVZerosBetweenPeaks *= height
         
