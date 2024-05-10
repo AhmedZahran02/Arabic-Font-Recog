@@ -36,10 +36,24 @@ class FeatureExtractor:
                     _a,feature = FeatureExtractor.applySIFT(self.dataSet[i][j])
                 elif method == 'HOG':
                     feature=FeatureExtractor.applyHOG(self.dataSet[i][j])
+                elif method == 'SURF':
+                    _a,feature = FeatureExtractor.applySURF(self.dataSet[i][j])
                 if feature is not None:
                     features.append(feature)
                     labels.append(str(i+1))
         
+        return features,labels
+    
+    def extract(self,method = 'HOG'):
+        features = []
+        labels = []
+        if method == 'SIFT':
+            features,labels = self.siftBagOfWords()
+        elif method == 'HOG':
+            features,labels = self.extractFeatures()
+        elif method == 'SURF':
+            features,labels = self.surfBagOfWords()
+            
         return features,labels
     
     @staticmethod
@@ -53,8 +67,14 @@ class FeatureExtractor:
         keypoints, descriptors = sift.detectAndCompute(image, None)
         return keypoints,descriptors
     
+    @staticmethod
+    def applySURF(image):
+        surf = cv2.xfeatures2d.SURF_create(400)
+        keypoints, descriptors = surf.detectAndCompute(image, None)
+        return keypoints, descriptors
+    
     # sift feature extraction extension
-    def bagOfWords(self,num_clusters = 1000):
+    def siftBagOfWords(self,num_clusters = 20):
         histograms = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
@@ -71,7 +91,25 @@ class FeatureExtractor:
                     
         return histograms,labels
     
-    def combinedFeatureExtraction(self,num_clusters = 100):
+        # sift feature extraction extension
+    def surfBagOfWords(self,num_clusters = 20):
+        histograms = []
+        features,labels = FeatureExtractor.extractFeatures(self,method='SURF')
+        surf_descriptors = np.concatenate(features, axis=0)
+        self.kmeans = KMeans(n_clusters=num_clusters)
+        self.kmeans.fit(surf_descriptors)
+        
+        for i in range(0,len(self.dataSet)):
+            for j in range(0,len(self.dataSet[i])):
+                keypoints, descriptors = FeatureExtractor.applySURF(self.dataSet[i][j])
+                if descriptors is not None:
+                    kmeanLabels = self.kmeans.predict(descriptors)
+                    histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
+                    histograms.append(histogram.astype(float))
+                    
+        return histograms,labels
+    
+    def combinedFeatureExtraction(self,num_clusters = 20):
         combinedFeatures = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
@@ -89,8 +127,17 @@ class FeatureExtractor:
                     
         return combinedFeatures,labels
     
-    def bagOfWord (self,image,num_clusters = 100):
+    def siftBagOfWord (self,image,num_clusters = 20):
         keypoints, descriptors = FeatureExtractor.applySIFT(image)
+        if descriptors is None:
+            return np.zeros(num_clusters)
+        else:
+            labels = self.kmeans.predict(descriptors)
+            histogram, _ = np.histogram(labels, bins=np.arange(num_clusters + 1))
+            return histogram.astype(float)
+        
+    def surfBagOfWord (self,image,num_clusters = 20):
+        keypoints, descriptors = FeatureExtractor.applySURF(image)
         if descriptors is None:
             return np.zeros(num_clusters)
         else:
