@@ -5,6 +5,9 @@ from ImageLoader import ImageLoader
 from skimage.feature import hog
 import numpy as np
 from sklearn.cluster import KMeans
+from Segmentation import *
+from OrientationDetector import *
+from NoiseRemoval import *
 
 
 
@@ -15,15 +18,18 @@ class FeatureExtractor:
         self.kmeans = None
 
     def loadDataset(self, filePath):
-        for character in range(1,30):
+        for character in range(1,5):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = random.sample(range(1, 4000 + 1), 500)
+            selected_numbers = random.sample(range(1, 999 + 1), 500)
             letterDataSet = []
             for i in range(0, len(selected_numbers)):
-                letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".png")
-                resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
+                letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".jpeg")
+                letter = NoiseRemoval.applyGaussianBlur(image=letter)
+                letter = Segmentation.segment(letter)
+                letter = OrientationDetector.rotate(letter)
+                # resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
                 # _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
-                letterDataSet.append(resized_letter)
+                letterDataSet.append(letter)
             self.dataSet.append(letterDataSet)
 
     def extractFeatures(self,method='HOG'):

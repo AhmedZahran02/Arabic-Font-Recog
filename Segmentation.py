@@ -9,6 +9,11 @@ class Segmentation:
         hist, _ = np.histogram(image.ravel(), bins=256, range=(0,256))
         peaks, _ = find_peaks(hist, height=0, distance=10)
         topTwoPeaks = sorted(sorted(peaks, key=lambda x: -hist[x])[:2],reverse=True)
+        if len(topTwoPeaks) == 0:
+            topTwoPeaks.append(255//2)
+            topTwoPeaks.append(255//2)
+        if len(topTwoPeaks)<2:
+            topTwoPeaks.append(255)
         threshold = (topTwoPeaks[0]+topTwoPeaks[1])/2.0
         if abs(topTwoPeaks[0] - image[0][0]) < abs(topTwoPeaks[1] - image[0][0]):
             threshold += abs(topTwoPeaks[0]-topTwoPeaks[1])/4
