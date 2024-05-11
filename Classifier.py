@@ -12,8 +12,7 @@ class Classifier:
 
     def __init__(self):
         self.pipeline = Pipeline([
-            ('scaler', StandardScaler()),
-            ('ada_boost', AdaBoostClassifier(n_estimators=50,random_state=42,algorithm="SAMME",estimator=SVC(kernel='linear')))
+            ('ada_boost', AdaBoostClassifier(n_estimators=360,random_state=42,algorithm="SAMME",estimator=SVC(kernel='linear')))
         ])
 
     def train(self,features,labels):

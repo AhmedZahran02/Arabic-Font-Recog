@@ -43,7 +43,7 @@ class OrientationDetector:
     
         numVZerosBetweenPeaks = 0
         for i in range(len(vPeaks) - 1):
-            num_zeros = np.count_nonzero(verticalHist[vPeaks[i]:vPeaks[i+1]] < np.max(verticalHist) * 0.05)
+            num_zeros = np.count_nonzero(verticalHist[vPeaks[i]:vPeaks[i+1]] == 0)
             if num_zeros > 0:
                 numVZerosBetweenPeaks+=1    
 
@@ -51,7 +51,7 @@ class OrientationDetector:
         hPeaks, _ = find_peaks(horizontalHist,height= np.max(horizontalHist) * 0.5, distance=10)
         numHZerosBetweenPeaks = 0
         for i in range(len(hPeaks) - 1):
-            num_zeros = np.count_nonzero(horizontalHist[hPeaks[i]:hPeaks[i+1]] < np.max(horizontalHist) * 0.05)
+            num_zeros = np.count_nonzero(horizontalHist[hPeaks[i]:hPeaks[i+1]] == 0)
             if num_zeros > 0:
                 numHZerosBetweenPeaks+=1   
         
