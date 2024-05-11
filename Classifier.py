@@ -18,7 +18,7 @@ class Classifier:
     def train(self,features,labels):
         self.pipeline.fit(features,labels)
     
-    def classify(self,image,featureExtractor,method='SIFT'):
+    def classify(self,image,featureExtractor : FeatureExtractor,method='SIFT'):
         # resized_letter = cv2.resize(image, (10, 20), interpolation=cv2.INTER_AREA)
         # _, resized_letter = cv2.threshold(resized_letter, 0, 255, cv2.THRESH_BINARY)
         ImageLoader.print(image)

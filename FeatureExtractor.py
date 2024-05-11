@@ -8,6 +8,7 @@ from sklearn.cluster import KMeans
 from Segmentation import *
 from OrientationDetector import *
 from NoiseRemoval import *
+import concurrent.futures as cf
 
 
 
@@ -20,11 +21,11 @@ class FeatureExtractor:
     def loadDataset(self, filePath):
         for character in range(1,5):
             new_path = filePath + str(character) + "\\"
-            selected_numbers = random.sample(range(1, 999 + 1), 500)
+            selected_numbers = random.sample(range(1, 999 + 1), 100)
             letterDataSet = []
-            for i in range(0, len(selected_numbers)):
-                letter = ImageLoader.loadImage(new_path, str(selected_numbers[i]) + ".jpeg")
-                letter = NoiseRemoval.applyGaussianBlur(image=letter)
+            for i in selected_numbers:
+                letter = ImageLoader.loadImage(new_path, str(i) + ".jpeg")
+                # letter = NoiseRemoval.applyGaussianBlur(image=letter)
                 letter = Segmentation.segment(letter)
                 letter = OrientationDetector.rotate(letter)
                 # resized_letter = cv2.resize(letter, (10, 20), interpolation=cv2.INTER_AREA)
@@ -59,25 +60,38 @@ class FeatureExtractor:
         keypoints, descriptors = sift.detectAndCompute(image, None)
         return keypoints,descriptors
     
+
+    def process_image(self,image, num_clusters = 200):
+        keypoints, descriptors = FeatureExtractor.applySIFT(image)
+        if descriptors is not None:
+            kmeanLabels = self.kmeans.predict(descriptors)
+            histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
+            return histogram.astype(float)
+        else:
+            return None
+
     # sift feature extraction extension
-    def bagOfWords(self,num_clusters = 1000):
+    def bagOfWords(self,num_clusters = 9):
         histograms = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
         self.kmeans = KMeans(n_clusters=num_clusters)
         self.kmeans.fit(sift_descriptors)
         
-        for i in range(0,len(self.dataSet)):
-            for j in range(0,len(self.dataSet[i])):
-                keypoints, descriptors = FeatureExtractor.applySIFT(self.dataSet[i][j])
-                if descriptors is not None:
-                    kmeanLabels = self.kmeans.predict(descriptors)
-                    histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
-                    histograms.append(histogram.astype(float))
-                    
-        return histograms,labels
-    
-    def combinedFeatureExtraction(self,num_clusters = 100):
+        with cf.ThreadPoolExecutor(max_workers=10) as executor:
+            # Submit tasks to the executor for each image
+            futures = [executor.submit(self.process_image, image) for row in self.dataSet for image in row]
+
+            cf.wait(futures, return_when=cf.ALL_COMPLETED)
+            # Retrieve results from the futures as they complete
+            for future in cf.as_completed(futures):
+                result = future.result()
+                if result is not None:
+                    histograms.append(result)
+            
+            return histograms,labels
+        
+    def combinedFeatureExtraction(self,num_clusters = 200):
         combinedFeatures = []
         features,labels = FeatureExtractor.extractFeatures(self,method='SIFT')
         sift_descriptors = np.concatenate(features, axis=0)
@@ -95,7 +109,7 @@ class FeatureExtractor:
                     
         return combinedFeatures,labels
     
-    def bagOfWord (self,image,num_clusters = 100):
+    def bagOfWord (self,image,num_clusters = 200):
         keypoints, descriptors = FeatureExtractor.applySIFT(image)
         if descriptors is None:
             return np.zeros(num_clusters)
