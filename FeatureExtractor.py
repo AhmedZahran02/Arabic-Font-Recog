@@ -41,8 +41,7 @@ class FeatureExtractor:
                 _a,feature = FeatureExtractor.applySIFT(dataSet[i])
             elif method == 'HOG':
                 feature=FeatureExtractor.applyHOG(dataSet[i])
-            if feature is not None:
-                features.append(feature)
+            features.append(feature)
         
         return features
     
@@ -64,15 +63,14 @@ class FeatureExtractor:
     def applySIFT(image):
         sift = cv2.SIFT_create()
         keypoints, descriptors = sift.detectAndCompute(image, None)
-        if descriptors is None:
-            descriptors = np.zeros((1,128))
         return keypoints,descriptors
     
     # sift feature extraction extension
     def siftBagOfWords(self,dataSet,num_clusters = 360):
         histograms = []
         features = FeatureExtractor.extractFeatures(self,dataSet,method='SIFT')
-        sift_descriptors = np.concatenate(features, axis=0)
+        filtered_list = [feature for feature in features if feature is not None]
+        sift_descriptors = np.concatenate(filtered_list, axis=0)
         if sift_descriptors.shape[1] != 128:
             raise ValueError('Expected SIFT descriptors to have 128 features, got', sift_descriptors.shape[1])
         
