@@ -26,7 +26,6 @@ class FeatureExtractor:
                 alteredImage = images[i]
                 alteredImage = NoiseRemoval.applyMedianFilter(image=images[i],kernel_size=3)
                 alteredImage = Segmentation.segment(alteredImage)
-                # alteredImage = OrientationDetector.rotate(alteredImage)
                 images[i] = alteredImage
             dataSet.extend(images)
             labels.extend((np.full(len(images), str(font))).tolist())
@@ -76,33 +75,22 @@ class FeatureExtractor:
         sift_descriptors = np.concatenate(features, axis=0)
         if sift_descriptors.shape[1] != 128:
             raise ValueError('Expected SIFT descriptors to have 128 features, got', sift_descriptors.shape[1])
-
+        
+        print("Kmeans start")
         self.cluster_model=KMeans(n_clusters=num_clusters)
         self.cluster_model.fit(sift_descriptors)
-        print("Kmeans start")
         for feature in features:
-                kmeanLabels = self.cluster_model.predict(feature)
-                histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
-                histograms.append(histogram.astype(float))      
+            histogram = np.zeros(num_clusters)
+            if (feature is None or len(feature) == 0):
+                histograms.append(histogram)
+                continue
+            
+            kmeanLabels = self.cluster_model.predict(feature)
+            for label in kmeanLabels:
+                histogram[label] += 1
+            histograms.append(histogram.astype(float))      
         print("Kmeans Done")            
         return histograms
-    
-    # def combinedFeatureExtraction(self,num_clusters = 100):
-    #     combinedFeatures = []
-    #     features = FeatureExtractor.extractFeatures(self,method='SIFT')
-    #     sift_descriptors = np.concatenate(features, axis=0)
-    #     self.kmeans = KMeans(n_clusters=num_clusters)
-    #     self.kmeans.fit(sift_descriptors)
-        
-    #     for feature in features:
-    #         keypoints, descriptors = FeatureExtractor.applySIFT(self.dataSet[i][j])
-    #         hogFeature = FeatureExtractor.applyHOG(self.dataSet[i][j])
-    #         if descriptors is not None:
-    #             kmeanLabels = self.kmeans.predict(descriptors)
-    #             histogram, _ = np.histogram(kmeanLabels, bins=np.arange(num_clusters + 1))
-    #             combinedFeatures.append(np.concatenate((histogram.astype(float), hogFeature)))
-                    
-    #     return combinedFeatures
     
     def siftBagOfWord (self,image,num_clusters = 360):
         keypoints, descriptors = FeatureExtractor.applySIFT(image)
