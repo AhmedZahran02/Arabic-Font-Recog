@@ -6,6 +6,11 @@ from scipy.signal import find_peaks
 
 clf = None
 Kmean = None
+#-------------------------------------
+
+
+
+#-------------------------------------
 
 def decompress_pickle(file):
     data = bz2.BZ2File(file, 'rb')
@@ -73,6 +78,7 @@ else:
 
 
 def ClassifyImage(image):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     alteredImage = applyMedianFilter(image,kernel_size=3)
     alteredImage = segment(alteredImage)
     result = classify(alteredImage)
