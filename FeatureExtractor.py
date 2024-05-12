@@ -24,7 +24,8 @@ class FeatureExtractor:
             images = ImageLoader.loadImages(new_path)
             for i in range(0, len(images)):
                 alteredImage = images[i]
-                alteredImage = NoiseRemoval.applyMedianFilter(image=images[i],kernel_size=3)
+                alteredImage = cv2.GaussianBlur(alteredImage, (5, 5), 0.1)
+                alteredImage = NoiseRemoval.applyMedianFilter(image=alteredImage,kernel_size=3)
                 alteredImage = Segmentation.segment(alteredImage)
                 images[i] = alteredImage
             dataSet.extend(images)
